@@ -3,6 +3,7 @@ using Microsoft.Owin.Security.OAuth;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace JsonWebToken
 {
@@ -22,6 +23,26 @@ namespace JsonWebToken
             if (context.ClientId == null)
             {
                 context.SetError("invalid_clientId", "client_Id não pode ser nulo");
+                return Task.FromResult<object>(null);
+            }
+
+            //Procurando pelo Client Id
+            var token = context.ClientId.Split(':');
+
+            var client_id = token.First();
+            var accessKey = token.Last();
+
+            var applicationAccess = WebApplicationAccess.Find(client_id);
+
+            if (applicationAccess == null)
+            {
+                context.SetError("invalid_clientId", "client_Id não encontrado");
+                return Task.FromResult<object>(null);
+            }
+
+            if (applicationAccess.AccessKey != accessKey)
+            {
+                context.SetError("invalid_clientId", "access key não encontrado ou inválido");
                 return Task.FromResult<object>(null);
             }
 
